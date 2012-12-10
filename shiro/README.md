@@ -44,8 +44,10 @@ Add an instance of the Stormpath-Shiro bundle to your service. For example,
     import com.esha.dropwizard.stormpath.shiro.StormpathShiroBundle;
     import com.esha.dropwizard.stormpath.shiro.StormpathShiroConfiguration;
     ...
-    private final StormpathShiroBundle stormpathBundle =
-        new StormpathBundle<MyConfiguration>() {
+    @Override
+    public void initialize(final Bootstrap<MyConfiguration> bootstrap) {
+        ...
+        bootstrap.addBundle(new StormpathBundle<MyConfiguration>() {
             @Override
             public Optional<StormpathConfiguration> getStormpathConfiguration(final MyConfiguration configuration) {
                 return Optional.<StormpathConfiguration>fromNullable(configuration.getStormpathConfiguration());
@@ -54,12 +56,7 @@ Add an instance of the Stormpath-Shiro bundle to your service. For example,
             public Optional<StormpathShiroConfiguration> getStormpathShiroConfiguration(final MyConfiguration configuration) {
                 return Optional.fromNullable(configuration.getStormpathConfiguration());
             }
-        };
-    ...
-    @Override
-    public void initialize(final Bootstrap<MyConfiguration> bootstrap) {
-        ...
-        bootstrap.addBundle(this.stormpathBundle);
+        });
         ...
     }
     ...
