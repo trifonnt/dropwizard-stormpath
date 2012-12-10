@@ -21,7 +21,7 @@ import com.yammer.dropwizard.config.Configuration;
 public interface ConfigurationStrategy<T extends Configuration> {
 
     /**
-     * Returns the Stormpath Shrio configuration element from the specified
+     * Returns the Stormpath Shiro configuration element from the specified
      * service configuration.
      *
      * @param configuration the service configuration
