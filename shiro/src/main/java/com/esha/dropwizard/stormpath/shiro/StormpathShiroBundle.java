@@ -40,9 +40,6 @@ public abstract class StormpathShiroBundle<T extends Configuration>
     private static final Logger logger =
         LoggerFactory.getLogger(StormpathShiroBundle.class);
 
-    private GroupPermissionResolver groupPermissionResolver;
-    private GroupRoleResolver groupRoleResolver;
-
     /**
      * {@inheritDoc}
      */
