@@ -44,10 +44,8 @@ Add an instance of the Stormpath-Shiro bundle to your service. For example,
     import com.esha.dropwizard.stormpath.shiro.StormpathShiroBundle;
     import com.esha.dropwizard.stormpath.shiro.StormpathShiroConfiguration;
     ...
-    @Override
-    public void initialize(final Bootstrap<MyConfiguration> bootstrap) {
-        ...
-        bootstrap.addBundle(new StormpathBundle<MyConfiguration>() {
+    private final StormpathShiroBundle stormpathBundle =
+        new StormpathShiroBundle<MyConfiguration>() {
             @Override
             public Optional<StormpathConfiguration> getStormpathConfiguration(final MyConfiguration configuration) {
                 return Optional.<StormpathConfiguration>fromNullable(configuration.getStormpathConfiguration());
@@ -56,7 +54,12 @@ Add an instance of the Stormpath-Shiro bundle to your service. For example,
             public Optional<StormpathShiroConfiguration> getStormpathShiroConfiguration(final MyConfiguration configuration) {
                 return Optional.fromNullable(configuration.getStormpathConfiguration());
             }
-        });
+        };
+    ...
+    @Override
+    public void initialize(final Bootstrap<MyConfiguration> bootstrap) {
+        ...
+        bootstrap.addBundle(this.stormpathBundle);
         ...
     }
     ...
@@ -64,10 +67,8 @@ Add an instance of the Stormpath-Shiro bundle to your service. For example,
 You can also use custom group role/permission resolvers. For example,
 
     ...
-    @Override
-    public void initialize(final Bootstrap<MyConfiguration> bootstrap) {
-        ...
-        bootstrap.addBundle(new StormpathBundle<MyConfiguration>() {
+    private final StormpathShiroBundle stormpathBundle =
+        new StormpathShiroBundle<MyConfiguration>() {
             ...
             @Override
             public Optional<GroupPermissionResolver> getGroupPermissionResolver(final MyConfiguration configuration) {
@@ -77,20 +78,20 @@ You can also use custom group role/permission resolvers. For example,
             public Optional<GroupRoleResolver> getGroupRoleResolver(final MyConfiguration configuration) {
                 return Optional.of(new MyGroupRoleResolver());
             }
-        });
-        ...
-    }
+        };
     ...
 
 This module provides an HTTP Basic authenticator. It requires no configuration. (It also has no Stormpath dependency and is designed to be used for any Shiro-integrated Dropwizard service.)
 
     ...
     import com.esha.dropwizard.shiro.BasicCredentialsAuthenticator;
+    import org.apache.shiro.SecurityUtils;
     import org.apache.shiro.subject.Subject;
     ...
     @Override
     public void run(final MyConfiguration configuration, final Environment environment) throws Exception {
         ...
+        SecurityUtils.setSecurityManager(this.stormpathBundle.getSecurityManager());
         final BasicCredentialsAuthenticator authenticator = new BasicCredentialsAuthenticator();
         environment.addProvider(new BasicAuthProvider<Subject>(authenticator, "myrealm"));
         ...

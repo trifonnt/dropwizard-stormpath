@@ -40,6 +40,8 @@ public abstract class StormpathShiroBundle<T extends Configuration>
     private static final Logger logger =
         LoggerFactory.getLogger(StormpathShiroBundle.class);
 
+    private SecurityManager securityManager;
+
     /**
      * {@inheritDoc}
      */
@@ -75,7 +77,7 @@ public abstract class StormpathShiroBundle<T extends Configuration>
 
         if (config.isEnabled()) {
             logger.debug("Stormpath Shiro is enabled");
-            final SecurityManager securityManager =
+            this.securityManager =
                 buildSecurityManager(config, groupPermissionResolver, groupRoleResolver);
             SecurityUtils.setSecurityManager(securityManager);
         } else {
@@ -120,6 +122,10 @@ public abstract class StormpathShiroBundle<T extends Configuration>
     @Override
     public Optional<GroupRoleResolver> getGroupRoleResolver(T configuration) {
         return Optional.absent();
+    }
+
+    public SecurityManager getSecurityManager() {
+        return this.securityManager;
     }
 
 }
