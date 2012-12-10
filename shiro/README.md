@@ -61,6 +61,27 @@ Add an instance of the Stormpath-Shiro bundle to your service. For example,
     }
     ...
 
+You can also use custom group role/permission resolvers. For example,
+
+    ...
+    @Override
+    public void initialize(final Bootstrap<MyConfiguration> bootstrap) {
+        ...
+        bootstrap.addBundle(new StormpathBundle<MyConfiguration>() {
+            ...
+            @Override
+            public Optional<GroupPermissionResolver> getGroupPermissionResolver(final MyConfiguration configuration) {
+                return Optional.of(new MyGroupPermissionResolver());
+            }
+            @Override
+            public Optional<GroupRoleResolver> getGroupRoleResolver(final MyConfiguration configuration) {
+                return Optional.of(new MyGroupRoleResolver());
+            }
+        });
+        ...
+    }
+    ...
+
 This module provides an HTTP Basic authenticator. It requires no configuration. (It also has no Stormpath dependency and is designed to be used for any Shiro-integrated Dropwizard service.)
 
     ...

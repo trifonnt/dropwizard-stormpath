@@ -18,6 +18,8 @@ package com.esha.dropwizard.stormpath.shiro;
 import com.esha.dropwizard.stormpath.StormpathBundle;
 import com.google.common.base.Optional;
 import com.stormpath.shiro.realm.ApplicationRealm;
+import com.stormpath.shiro.realm.GroupPermissionResolver;
+import com.stormpath.shiro.realm.GroupRoleResolver;
 import com.yammer.dropwizard.ConfiguredBundle;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Configuration;
@@ -32,10 +34,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class StormpathShiroBundle<T extends Configuration>
-    extends StormpathBundle<T> implements ConfigurationStrategy<T> {
+    extends StormpathBundle<T>
+    implements ConfigurationStrategy<T>, GroupResolutionStrategy<T> {
 
     private static final Logger logger =
         LoggerFactory.getLogger(StormpathShiroBundle.class);
+
+    private GroupPermissionResolver groupPermissionResolver;
+    private GroupRoleResolver groupRoleResolver;
 
     /**
      * {@inheritDoc}
@@ -58,32 +64,65 @@ public abstract class StormpathShiroBundle<T extends Configuration>
             getStormpathShiroConfiguration(configuration);
         if (stormpathShiroConfig.isPresent()) {
             logger.debug("Stormpath Shiro is configured");
-            initializeShiro(stormpathShiroConfig.get());
+            initializeShiro(stormpathShiroConfig.get(),
+                getGroupPermissionResolver(configuration),
+                getGroupRoleResolver(configuration));
         } else {
             logger.debug("Stormpath Shiro is not configured");
         }
     }
 
-    private void initializeShiro(final StormpathShiroConfiguration config) {
+    private void initializeShiro(final StormpathShiroConfiguration config,
+        final Optional<GroupPermissionResolver> groupPermissionResolver,
+        final Optional<GroupRoleResolver> groupRoleResolver) {
+
         if (config.isEnabled()) {
             logger.debug("Stormpath Shiro is enabled");
-            final SecurityManager securityManager = buildSecurityManager(config);
+            final SecurityManager securityManager =
+                buildSecurityManager(config, groupPermissionResolver, groupRoleResolver);
             SecurityUtils.setSecurityManager(securityManager);
         } else {
             logger.debug("Stormpath Shiro is not enabled");
         }
     }
 
-    private SecurityManager buildSecurityManager(final StormpathShiroConfiguration config) {
+    private SecurityManager buildSecurityManager(final StormpathShiroConfiguration config,
+        final Optional<GroupPermissionResolver> groupPermissionResolver,
+        final Optional<GroupRoleResolver> groupRoleResolver) {
+
         final ApplicationRealm applicationRealm = new ApplicationRealm();
         applicationRealm.setApplicationRestUrl(config.getApplicationRestUrl());
         applicationRealm.setClient(getClient());
+
+        if (groupPermissionResolver.isPresent()) {
+            applicationRealm.setGroupPermissionResolver(groupPermissionResolver.get());
+        }
+
+        if (groupRoleResolver.isPresent()) {
+            applicationRealm.setGroupRoleResolver(groupRoleResolver.get());
+        }
 
         final DefaultSecurityManager securityManager =
             new DefaultSecurityManager(applicationRealm);
         ((DefaultSessionStorageEvaluator)((DefaultSubjectDAO)securityManager.getSubjectDAO())
             .getSessionStorageEvaluator()).setSessionStorageEnabled(config.isSessionStorageEnabled());
         return securityManager;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Optional<GroupPermissionResolver> getGroupPermissionResolver(T configuration) {
+        return Optional.absent();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Optional<GroupRoleResolver> getGroupRoleResolver(T configuration) {
+        return Optional.absent();
     }
 
 }
